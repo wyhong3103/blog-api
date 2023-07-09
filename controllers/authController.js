@@ -89,7 +89,7 @@ const verifyToken = (req, res, next) => {
         if (err) {
             res.sendStatus(403);
         }else{
-            req.user = authData;
+            req.user = authData.user;
             next();
         }
       });
