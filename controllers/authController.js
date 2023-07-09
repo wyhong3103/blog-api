@@ -47,6 +47,15 @@ const register = [
     body('password')
     .isLength({min : 8, max : 128})
     .withMessage("Password should be within 8 and 128 characters"),
+    body('repassword')
+    .notEmpty()
+    .withMessage('Re-password is required')
+    .custom((value, { req }) => {
+        if (value !== req.body.password) {
+            throw new Error('Passwords do not match');
+        }
+        return true;
+    }),
     asyncHandler(
         async (req, res) => {
             const error = validationResult(req);
