@@ -68,7 +68,6 @@ const register = [
                 const newUser = new User({
                     username : req.body.username,
                     password : hashed,
-                    isAdmin : false
                 })
                 await newUser.save();
                 res.json({
