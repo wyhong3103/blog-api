@@ -9,7 +9,7 @@ const { body, validationResult } = require("express-validator");
 const get_blogs = asyncHandler(
     async (req, res) => {
         const blogs = await Blog.find({}, {date : 0, comments : 0}).populate('author', {username : 1}).exec();
-        res.json({blogs});
+        res.json({status : true, blogs});
     }
 )
 
@@ -22,8 +22,9 @@ const post_blog = [
             const error = validationResult(req);
             
             if (!error.isEmpty()){
-                res.status(403).json(
+                res.json(
                     {
+                        status : false,
                         err : error.array().map(i => i.msg)
                     }
                 )
@@ -44,6 +45,7 @@ const post_blog = [
 
             await blog.save();
             res.json({
+                status : true,
                 msg : "Blog posted."
             })
         }
@@ -71,6 +73,7 @@ const get_blog = asyncHandler(
         }
 
         res.json({
+            status : true,
             blog
         });
     }
@@ -114,6 +117,7 @@ const post_comment = asyncHandler(
         await blog.save();
 
         res.json({
+            status : true,
             msg : "Comment posted."
         })
     }
@@ -128,8 +132,9 @@ const update_blog = [
             const error = validationResult(req);
             
             if (!error.isEmpty()){
-                res.status(403).json(
+                res.json(
                     {
+                        status : false,
                         err : error.array().map(i => i.msg)
                     }
                 )
@@ -169,6 +174,7 @@ const update_blog = [
 
             await blog.save();
             res.json({
+                status : true,
                 msg : "Blog updated."
             })
         }
@@ -206,6 +212,7 @@ const delete_blog = asyncHandler(
         await Blog.findByIdAndRemove(req.params.id).exec();
         res.json(
             {
+                status : true,
                 msg : "Blog deleted."
             }
         );
@@ -265,6 +272,7 @@ const update_comment = asyncHandler(
         await comment.save();
 
         res.json({
+            status : true,
             msg : "Comment updated."
         })
     }
@@ -321,6 +329,7 @@ const delete_comment = asyncHandler(
         await Comment.findByIdAndRemove(req.params.id).exec();
 
         res.json({
+            status : true,
             msg : "Comment deleted."
         })
     }

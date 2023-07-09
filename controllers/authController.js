@@ -14,7 +14,8 @@ const login = asyncHandler(
         const user = await User.findOne({username : req.body.username}).exec();
         
         if (user === null){
-            res.status(403).json({
+            res.json({
+                status : false,
                 err : ["User not found"]
             });
             return;
@@ -24,11 +25,13 @@ const login = asyncHandler(
             if (result){
                 const accessToken = generateAccessToken(user);
                 res.json({
+                    status : true,
+                    username : user.username,
                     accessToken
-
                 })
             }else {
-                res.status(403).json({
+                res.json({
+                    status : false,
                     err : ["Password does not match"]
                 });
             }
@@ -49,7 +52,8 @@ const register = [
             const error = validationResult(req);
 
             if (!error.isEmpty()){
-                res.status(403).json({
+                res.json({
+                    status : false,
                     err : [error.array().map(i => i.msg)]
                 })
                 return;
@@ -58,7 +62,8 @@ const register = [
             const user = await User.findOne({username : req.body.username}).exec();
 
             if (user !== null){
-                res.status(403).json({
+                res.json({
+                    status : false,
                     err : ["Username is unavailable"]
                 })
                 return;
@@ -71,6 +76,7 @@ const register = [
                 })
                 await newUser.save();
                 res.json({
+                    status : true,
                     msg : "Successfully registered"
                 });
             });
