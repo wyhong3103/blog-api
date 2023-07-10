@@ -63,7 +63,7 @@ const register = [
             if (!error.isEmpty()){
                 res.json({
                     status : false,
-                    err : [error.array().map(i => i.msg)]
+                    err : error.array().map(i => i.msg)
                 })
                 return;
             }
@@ -93,6 +93,23 @@ const register = [
     )
 ]
 
+const verify = (req, res) => {
+    const bearerHeader = req.headers['authorization'];
+    if(typeof bearerHeader !== 'undefined') {
+      const bearer = bearerHeader.split(' ');
+      const bearerToken = bearer[1];
+      jwt.verify(bearerToken, process.env.ACCESS_TOKEN_SECRET, (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        }else{
+            res.json({status : true, userid : authData.user._id});
+        }
+      });
+    } else {
+      res.sendStatus(403);
+    }
+}
+
 
 const verifyToken = (req, res, next) => {
     const bearerHeader = req.headers['authorization'];
@@ -115,5 +132,6 @@ const verifyToken = (req, res, next) => {
 module.exports = {
     login,
     register,
-    verifyToken
+    verifyToken,
+    verify
 }
