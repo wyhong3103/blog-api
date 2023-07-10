@@ -7,7 +7,10 @@ const blogController = require('../controllers/blogController');
 router.post('/login', authController.login);
 
 //Register
-router.post('/signup', authController.register);
+router.post('/register', authController.register);
+
+//Verify access token
+router.post('/verify', authController.verify)
 
 //Get all the blogs
 router.get('/blog', blogController.get_blogs);
@@ -16,7 +19,7 @@ router.get('/blog', blogController.get_blogs);
 router.post('/blog', authController.verifyToken, blogController.post_blog);
 
 //Get a blog
-router.get('/blog/:id', authController.verifyToken, blogController.get_blog);
+router.get('/blog/:id', blogController.get_blog);
 
 //Post comment
 router.post('/blog/:id', authController.verifyToken, blogController.post_comment);
