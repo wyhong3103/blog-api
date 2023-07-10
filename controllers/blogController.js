@@ -63,7 +63,14 @@ const get_blog = asyncHandler(
             return;
         }
 
-        const blog = await Blog.findById(req.params.id).populate("comments").populate("comments.author").populate("author", {username : 1}).exec();
+        const blog = await Blog.findById(req.params.id)
+                    .populate({
+                        path: 'comments',
+                        populate: {
+                            path: 'author',
+                        }
+                    })
+                    .populate("author", {username : 1}).exec();
 
         if (blog === null){
             res.status(404).json({
@@ -79,44 +86,50 @@ const get_blog = asyncHandler(
     }
 )
 
-const post_comment = asyncHandler(
-    async (req, res) => {
-        if (!mongoose.isValidObjectId(req.params.id)){
-            res.status(404).json(
+const post_comment = [
+    body('content')
+    .isLength({min : 1, max : 20000})
+    .withMessage("Comment should be within 1 and 20000 characters.")
+    ,
+    asyncHandler(
+        async (req, res) => {
+            if (!mongoose.isValidObjectId(req.params.id)){
+                res.status(404).json(
+                    {
+                        err : ['Blog is invalid.']
+                    }
+                );
+                return;
+            }
+
+            const blog = await Blog.findById(req.params.id).exec();
+
+            if (blog === null){
+                res.status(404).json({
+                    err : ['Blog not found.']
+                });
+                return;
+            }
+
+            const comment = new Comment(
                 {
-                    err : ['Blog is invalid.']
+                    content : req.body.content,
+                    author : req.user._id,
+                    date : Date.now()
                 }
             );
-            return;
+
+            blog.comments.push(comment);
+            await comment.save();
+            await blog.save();
+
+            res.json({
+                status : true,
+                msg : "Comment posted."
+            })
         }
-
-        const blog = await Blog.findById(req.params.id).exec();
-
-        if (blog === null){
-            res.status(404).json({
-                err : ['Blog not found.']
-            });
-            return;
-        }
-
-        const comment = new Comment(
-            {
-                content : req.body.content,
-                author : req.user._id,
-                date : Date.now()
-            }
-        );
-
-        blog.comments.push(comment);
-        await comment.save();
-        await blog.save();
-
-        res.json({
-            status : true,
-            msg : "Comment posted."
-        })
-    }
-)
+    )
+];
 
 const update_blog = [
     body('title')
@@ -214,60 +227,67 @@ const delete_blog = asyncHandler(
     }
 )
 
-const update_comment = asyncHandler(
-    async (req, res) => {
-        if (!mongoose.isValidObjectId(req.params.blogid)){
-            res.status(404).json(
-                {
-                    err : ['Blog is invalid.']
-                }
-            );
-            return;
+const update_comment = [
+    body('content')
+    .isLength({min : 1, max : 20000})
+    .withMessage("Comment should be within 1 and 20000 characters.")
+    ,
+    asyncHandler(
+        async (req, res) => {
+
+            if (!mongoose.isValidObjectId(req.params.blogid)){
+                res.status(404).json(
+                    {
+                        err : ['Blog is invalid.']
+                    }
+                );
+                return;
+            }
+
+            const blog = await Blog.findById(req.params.blogid).exec();
+
+            if (blog === null){
+                res.status(404).json({
+                    err : ['Blog not found.']
+                });
+                return;
+            }
+
+            if (!mongoose.isValidObjectId(req.params.id)){
+                res.status(404).json(
+                    {
+                        err : ['Comment is invalid.']
+                    }
+                );
+                return;
+            }
+
+            const comment = await Comment.findById(req.params.id).exec();
+
+            if (comment === null){
+                res.status(404).json({
+                    err : ['Comment not found.']
+                });
+                return;
+            }
+
+            if (comment.author._id.toString() !== req.user._id){
+                res.status(403).json({
+                    err : ['Unauthorized.']
+                });
+                return;
+            }
+
+            comment.content = req.body.content;
+            await comment.save();
+
+            res.json({
+                status : true,
+                msg : "Comment updated."
+            })
         }
-
-        const blog = await Blog.findById(req.params.blogid).exec();
-
-        if (blog === null){
-            res.status(404).json({
-                err : ['Blog not found.']
-            });
-            return;
-        }
-
-        if (!mongoose.isValidObjectId(req.params.id)){
-            res.status(404).json(
-                {
-                    err : ['Comment is invalid.']
-                }
-            );
-            return;
-        }
-
-        const comment = await Comment.findById(req.params.id).exec();
-
-        if (comment === null){
-            res.status(404).json({
-                err : ['Comment not found.']
-            });
-            return;
-        }
-
-        if (comment.author._id.toString() !== req.user._id){
-            res.status(403).json({
-                err : ['Unauthorized.']
-            });
-            return;
-        }
-
-        comment.content = req.body.content;
-        await comment.save();
-
-        res.json({
-            status : true,
-            msg : "Comment updated."
-        })
-    }
-)
+    )
+]
 
 const delete_comment = asyncHandler(
     async (req, res) => {
