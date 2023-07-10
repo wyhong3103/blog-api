@@ -327,7 +327,7 @@ const delete_comment = asyncHandler(
             return;
         }
 
-        if (comment.author._id.toString() !== req.user._id){
+        if (comment.author._id.toString() !== req.user._id && blog.author._id.toString() !==req.user._id){
             res.status(403).json({
                 err : ['Unauthorized.']
             });
