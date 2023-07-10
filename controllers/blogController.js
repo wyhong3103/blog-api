@@ -63,7 +63,7 @@ const get_blog = asyncHandler(
             return;
         }
 
-        const blog = await Blog.findById(req.params.id).populate("comments").populate("author", {username : 1}).exec();
+        const blog = await Blog.findById(req.params.id).populate("comments").populate("comments.author").populate("author", {username : 1}).exec();
 
         if (blog === null){
             res.status(404).json({
@@ -99,14 +99,9 @@ const post_comment = asyncHandler(
             return;
         }
 
-        const window = new JSDOM('').window;
-        const DOMPurify = createDOMPurify(window);
-        const clean = DOMPurify.sanitize(req.body.content);
-
-
         const comment = new Comment(
             {
-                content : clean,
+                content : req.body.content,
                 author : req.user._id,
                 date : Date.now()
             }
@@ -239,10 +234,6 @@ const update_comment = asyncHandler(
             return;
         }
 
-        const window = new JSDOM('').window;
-        const DOMPurify = createDOMPurify(window);
-        const clean = DOMPurify.sanitize(req.body.content);
-
         if (!mongoose.isValidObjectId(req.params.id)){
             res.status(404).json(
                 {
@@ -268,7 +259,7 @@ const update_comment = asyncHandler(
             return;
         }
 
-        comment.content = clean;
+        comment.content = req.body.content;
         await comment.save();
 
         res.json({
